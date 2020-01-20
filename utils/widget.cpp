@@ -8,7 +8,7 @@ Widget::Widget(float begin, float end)
 
 void Widget::draw()
 {
-    ImGui::SliderFloat("Time step", &currentTimeStep, beginTimeStep, endTimeStep); 
+    ImGui::SliderFloat("Delta", &currentTimeStep, beginTimeStep, endTimeStep); 
     if(currentTimeStep != preTimeStep){
         timeStepChanged = true;
     }else{

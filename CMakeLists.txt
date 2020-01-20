@@ -36,6 +36,8 @@ include_directories("${CMAKE_SOURCE_DIR}/utils")
 
 add_executable(viewer main.cpp)
 
+add_executable(test_data testMain.cpp)
+
 # add_library(common dataLoader.cpp)
 
 set_target_properties(viewer PROPERTIES
@@ -47,5 +49,16 @@ target_link_libraries(viewer glfw
                              imgui
                              util
                             #  transferFunction
+                             ospcommon::ospcommon 
+                             ospray::ospray)
+
+set_target_properties(test_data PROPERTIES
+    CXX_STANDARD 11
+    CXX_STANDARD_REQUIRED ON)
+
+target_link_libraries(test_data glfw
+                             gl3w
+                             imgui
+                             util
                              ospcommon::ospcommon 
                              ospray::ospray)

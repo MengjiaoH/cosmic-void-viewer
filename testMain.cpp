@@ -1,5 +1,7 @@
 // C++
 #include <iostream>
+#include <chrono>
+#include <ctime>
 
 // OpenGL
 #include <GL/gl3w.h>
@@ -20,12 +22,8 @@
 #include "ArcballCamera.h"
 #include "transfer_function_widget.h"
 #include "shader.h"
-#include "widget.h"
+// #include "widget.h"
 #include "parseArgs.h"
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
-
 
 #include "dataLoader.h"
 #include "ospray_volume.h"
@@ -59,9 +57,8 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 // Global variables
-// ospcommon::math::vec3i dims(116, 29, 26);
-ospcommon::math::vec3i dims(1024, 1024, 5);
-// ospcommon::math::vec3i dims(512, 512, 512);
+// ospcommon::math::vec3i dims(1, 1024, 1024);
+ospcommon::math::vec3i dims(256, 256, 256);
 
 int main(int argc, const char** argv)
 {
@@ -114,23 +111,9 @@ int main(int argc, const char** argv)
     glfwSwapInterval(1);
 
     if (gl3wInit()) {
-            fprintf(stderr, "failed to initialize OpenGL\n");
-            return -1;
+        fprintf(stderr, "failed to initialize OpenGL\n");
+        return -1;
     }
-    
-    // Setup Dear ImGui context
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-
-    // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
-
-    // Setup Platform/Renderer bindings
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init();
 
     ospcommon::math::vec2f range;
     ospcommon::math::box3f worldBound;
@@ -147,9 +130,7 @@ int main(int argc, const char** argv)
     
 
     std::shared_ptr<App> app;
-    TransferFunctionWidget transferFcnWidget;
-    Widget widget(range.x, range.y);
-    int total = (range.y - range.x) / 0.1f;
+    // TransferFunctionWidget transferFcnWidget;
     app = std::make_shared<App>(imgSize, arcballCamera);
 
     Shader display_render(fullscreen_quad_vs, display_texture_fs);
@@ -171,8 +152,6 @@ int main(int argc, const char** argv)
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glDisable(GL_DEPTH_TEST);
 
-
-    // OSPCamera camera = ospNewCamera("perspective");
     ospray::cpp::Camera camera("perspective");
     ospcommon::math::vec3f pos = arcballCamera.eyePos();
     ospcommon::math::vec3f dir = arcballCamera.lookDir();
@@ -188,21 +167,19 @@ int main(int argc, const char** argv)
     ospray::cpp::VolumetricModel model(ospVolume);
     ospray::cpp::TransferFunction transferFcn("piecewise_linear");
 
-    auto colormap = transferFcnWidget.get_colormap();
+    // auto colormap = transferFcnWidget.get_colormap();
     // set transfer function
-    // std::vector<ospcommon::math::vec3f> colors = {ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
-    //                                             ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
-    //                                             ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
-    //                                               ospcommon::math::vec3f(0.0f, 1.0f, 0.0f)};
-    // std::vector<float> opacities = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
+    std::vector<ospcommon::math::vec3f> colors = {ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
+                                                ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
+                                                ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
+                                                  ospcommon::math::vec3f(0.0f, 1.0f, 0.0f)};
+    std::vector<float> opacities = {0.0f, 1.0f};
 
-    // transferFcn.setParam("color", ospray::cpp::Data(colors));
-    // ospray::cpp::Data opacity = ospray::cpp::Data(opacities);
-    // transferFcn.setParam("opacity", opacity);
-    // // tfcn.setParam("opacity", ospray::cpp::Data(opacities));
-    // transferFcn.setParam("valueRange", range);
-    // transferFcn.commit();
-    update_transfer_fcn(transferFcn, colormap, range);
+    transferFcn.setParam("color", ospray::cpp::Data(colors));
+    transferFcn.setParam("opacity", ospray::cpp::Data(opacities));
+    transferFcn.setParam("valueRange", range);
+    transferFcn.commit();
+    // update_transfer_fcn(transferFcn, colormap, range);
     // looping_transfer_fcn(transferFcn, range, 0);
     model.setParam("transferFunction", transferFcn);
     // model.setParam("samplingRate", 30.f);
@@ -211,19 +188,19 @@ int main(int argc, const char** argv)
     // put the model into a group (collection of models)
     ospray::cpp::Group group;
 
-    ospray::cpp::Geometry isoGeom("isosurfaces");
-    float isovalue{0.1f};
-    isoGeom.setParam("isovalue", ospray::cpp::Data(isovalue));
-    isoGeom.setParam("volume", model);
-    isoGeom.commit();
+    // ospray::cpp::Geometry isoGeom("isosurfaces");
+    // float isovalue{0.1f};
+    // isoGeom.setParam("isovalue", ospray::cpp::Data(isovalue));
+    // isoGeom.setParam("volume", model);
+    // isoGeom.commit();
 
-    ospray::cpp::Material mat("scivis", "OBJMaterial");
-    mat.setParam("Ks", ospcommon::math::vec3f(0.2f));
-    mat.commit();
+    // ospray::cpp::Material mat("scivis", "OBJMaterial");
+    // mat.setParam("Ks", ospcommon::math::vec3f(0.2f));
+    // mat.commit();
 
-    ospray::cpp::GeometricModel isoModel(isoGeom);
-    isoModel.setParam("material", ospray::cpp::Data(mat));
-    isoModel.commit();
+    // ospray::cpp::GeometricModel isoModel(isoGeom);
+    // isoModel.setParam("material", ospray::cpp::Data(mat));
+    // isoModel.commit();
 
     // group.setParam("geometry", ospray::cpp::Data(isoModel));
 
@@ -249,8 +226,8 @@ int main(int argc, const char** argv)
 
     // complete setup of renderer
     renderer.setParam("aoSamples", 0);
-    renderer.setParam("spp", 10);
-    renderer.setParam("bgColor", 0.0f);  // white, transparent
+    renderer.setParam("spp", 1);
+    renderer.setParam("bgColor", 1.0f);  // white, transparent
     renderer.commit();
 
     // create and setup framebuffer
@@ -263,8 +240,6 @@ int main(int argc, const char** argv)
 
     while (!glfwWindowShouldClose(window))
     {
-        app -> isTransferFcnChanged = transferFcnWidget.changed();
-        app -> isTimeStepChanged = widget.changed();
 
         if (app ->isCameraChanged) {
             camera.setParam("position", app->camera.eyePos());
@@ -275,42 +250,6 @@ int main(int argc, const char** argv)
             app ->isCameraChanged = false;
         }
 
-        if (app -> isTransferFcnChanged) {
-            // std::cout << "transfer function changed!" << std::endl;
-			auto colormap = transferFcnWidget.get_colormap();
-			update_transfer_fcn(transferFcn, colormap, range);
-            renderer.commit();
-            framebuffer.clear();
-            app ->isTransferFcnChanged = false;
-		}
-
-        if(app -> isTimeStepChanged){
-            //load other time step
-            // std::cout << " time step changed! Need to load other time step" << std::endl;
-            // std::string filename = prefix + std::to_string(controlWidget.getTimeStep
-            float timestep = widget.getTimeStep();
-            int radio = (float)(timestep - range.x) / (range.y - range.x) * total;
-            // std::cout << "time step " << timestep << "radio " << radio << std::endl;
-            looping_transfer_fcn(transferFcn, range, radio);
-            framebuffer.clear();
-            app ->isTimeStepChanged = false;
-        }
-        
-        // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-
-		if (ImGui::Begin("Transfer Function")) {
-			transferFcnWidget.draw_ui();
-		}
-        
-        // if(ImGui::Begin("Control Panel")){
-        //     widget.draw();
-        // }
-
-		ImGui::End();
-
         // std::cout << "start rendering " << std::endl;
         auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -318,14 +257,8 @@ int main(int argc, const char** argv)
 
         auto t2 = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
-        std::cout << "Frame rate: " << 1.f / time_span.count() << "\n";
+        // std::cout << "Frame rate: " << 1.f / time_span.count() << "\n";
         uint32_t *fb = (uint32_t *)framebuffer.map(OSP_FB_COLOR);
-
-        // std::string filename = "test.jpg";
-        // stbi_write_jpg(filename.c_str(), 1024, 1024, 4, fb, 100);
-
-
-        ImGui::Render();
         
         glViewport(0, 0, imgSize_x, imgSize_y);
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, imgSize_x, imgSize_y, GL_RGBA, GL_UNSIGNED_BYTE, fb);
@@ -335,16 +268,9 @@ int main(int argc, const char** argv)
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         framebuffer.unmap(fb);
 
-        // frameId++;
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    // Cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
     glfwTerminate();

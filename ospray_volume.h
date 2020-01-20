@@ -15,12 +15,13 @@ ospray::cpp::Volume make_ospray_volume(Volume v, ospcommon::math::box3f &worldBo
     ospray::cpp::Volume volume("structured_volume");
     const ospcommon::math::vec3i dims(v.dims.x, v.dims.y, v.dims.z);
 
-    ospcommon::math::vec3f spacing{1.f};
+    ospcommon::math::vec3f spacing{.5f};
     auto numVoxels = dims.product();
 
     std::vector<float> data;
 
     for(int i = 0; i < v.voxels.size(); i++){
+        // std::cout << v.voxels[i] << " ";
         data.push_back(v.voxels[i]);
     }
     std::cout << std::endl;
@@ -86,7 +87,7 @@ void looping_transfer_fcn(ospray::cpp::TransferFunction &tfcn, ospcommon::math::
         ospcommon::math::vec3f c(0.f / 255.f, 0.f/ 255.f, 255.f/ 255.f);
         colors.push_back(c);
         if(i < temp){
-            opacities.push_back(0.f);
+            opacities.push_back(1.f);
         }else{
             opacities.push_back(1.0f);
         }
