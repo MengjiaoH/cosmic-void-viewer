@@ -4,18 +4,18 @@
 #include <vector>
 
 #include "ospray/ospray_cpp.h"
-#include "ospcommon/math/vec.h"
-#include "ospcommon/math/box.h"
+#include "rkcommon/math/vec.h"
+#include "rkcommon/math/box.h"
 
 #include "dataLoader.h"
 
 
-ospray::cpp::Volume make_ospray_volume(Volume v, ospcommon::math::box3f &worldBound){
+ospray::cpp::Volume make_ospray_volume(Volume v, rkcommon::math::box3f &worldBound){
     
     ospray::cpp::Volume volume("structured_volume");
-    const ospcommon::math::vec3i dims(v.dims.x, v.dims.y, v.dims.z);
+    const rkcommon::math::vec3i dims(v.dims.x, v.dims.y, v.dims.z);
 
-    ospcommon::math::vec3f spacing{.5f};
+    rkcommon::math::vec3f spacing{.5f};
     auto numVoxels = dims.product();
 
     std::vector<float> data;
@@ -29,18 +29,18 @@ ospray::cpp::Volume make_ospray_volume(Volume v, ospcommon::math::box3f &worldBo
     volume.setParam("voxelType",int(OSP_FLOAT));
     volume.setParam("dimensions", dims);
     volume.setParam("voxelData", ospray::cpp::Data(data));
-    // volume.setParam("gridSpacing", ospcommon::math::vec3i(2.5f));
-    worldBound = ospcommon::math::box3f(ospcommon::math::vec3f(0.f), dims * spacing);
+    // volume.setParam("gridSpacing", rkcommon::math::vec3i(2.5f));
+    worldBound = rkcommon::math::box3f(rkcommon::math::vec3f(0.f), dims * spacing);
 
     volume.commit();
   
     return volume;
 }
 
-// ospray::cpp::Volume recommit_ospray_volume(Volume<float> v, ospcommon::math::vec2f &range){
+// ospray::cpp::Volume recommit_ospray_volume(Volume<float> v, rkcommon::math::vec2f &range){
 //     ospray::cpp::Volume volume("structured_volume");
-//     const ospcommon::math::vec3i dims(v.dim.x, v.dim.y, v.dim.z);
-//     ospcommon::math::vec3f spacing{1.f};
+//     const rkcommon::math::vec3i dims(v.dim.x, v.dim.y, v.dim.z);
+//     rkcommon::math::vec3f spacing{1.f};
 
 //     auto numVoxels = dims.product();
 //     volume.setParam("voxelType",int(OSP_FLOAT));
@@ -54,12 +54,12 @@ ospray::cpp::Volume make_ospray_volume(Volume v, ospcommon::math::box3f &worldBo
 // }
 
 
-void update_transfer_fcn(ospray::cpp::TransferFunction &tfcn, const std::vector<uint8_t> &colormap, ospcommon::math::vec2f valueRange) {
-    std::vector<ospcommon::math::vec3f> colors;
+void update_transfer_fcn(ospray::cpp::TransferFunction &tfcn, const std::vector<uint8_t> &colormap, rkcommon::math::vec2f valueRange) {
+    std::vector<rkcommon::math::vec3f> colors;
     std::vector<float> opacities;
 
     for (size_t i = 0; i < colormap.size() / 4; ++i) {
-        ospcommon::math::vec3f c(colormap[i * 4] / 255.f, colormap[i * 4 + 1] / 255.f, colormap[i * 4 + 2] / 255.f);
+        rkcommon::math::vec3f c(colormap[i * 4] / 255.f, colormap[i * 4 + 1] / 255.f, colormap[i * 4 + 2] / 255.f);
         colors.push_back(c);
         if(colormap[i * 4 + 3] / 255.f < 0.1f){
             opacities.push_back(0.f);
@@ -78,13 +78,13 @@ void update_transfer_fcn(ospray::cpp::TransferFunction &tfcn, const std::vector<
 
 }
 
-void looping_transfer_fcn(ospray::cpp::TransferFunction &tfcn, ospcommon::math::vec2f valueRange, int temp){
+void looping_transfer_fcn(ospray::cpp::TransferFunction &tfcn, rkcommon::math::vec2f valueRange, int temp){
     int total = (valueRange.y - valueRange.x) / 0.1f;
-    std::vector<ospcommon::math::vec3f> colors;
+    std::vector<rkcommon::math::vec3f> colors;
     std::vector<float> opacities;
 
     for (size_t i = 0; i < total; ++i) {
-        ospcommon::math::vec3f c(0.f / 255.f, 0.f/ 255.f, 255.f/ 255.f);
+        rkcommon::math::vec3f c(0.f / 255.f, 0.f/ 255.f, 255.f/ 255.f);
         colors.push_back(c);
         if(i < temp){
             opacities.push_back(1.f);

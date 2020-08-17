@@ -4,9 +4,9 @@ project(cosmic-void-viewer)
 set (CMAKE_CXX_STANDARD 11)
 
 ## path to glfw3
-add_subdirectory("${CMAKE_SOURCE_DIR}/externals/glfw-3.3")
+add_subdirectory("${CMAKE_SOURCE_DIR}/externals/glfw-3.3.2")
 
-include_directories("${CMAKE_SOURCE_DIR}/externals/glfw-3.3/include")
+include_directories("${CMAKE_SOURCE_DIR}/externals/glfw-3.3.2/include")
 
 ## path to gl3w
 include_directories("${CMAKE_SOURCE_DIR}/externals/gl3w/include")
@@ -21,8 +21,8 @@ target_include_directories(gl3w PUBLIC "$<BUILD_INTERFACE:"
 # find OpenGL
 find_package(OpenGL REQUIRED)
 
-## find ospcommon
-find_package(ospcommon REQUIRED)
+## find rkcommon
+find_package(rkcommon REQUIRED)
 ## find ospray
 find_package(ospray REQUIRED)
 
@@ -34,23 +34,23 @@ include_directories("${CMAKE_SOURCE_DIR}/externals/imgui")
 add_subdirectory("${CMAKE_SOURCE_DIR}/utils")
 include_directories("${CMAKE_SOURCE_DIR}/utils")
 
-add_executable(viewer main.cpp)
+# add_executable(viewer main.cpp)
 
 add_executable(test_data testMain.cpp)
 
 # add_library(common dataLoader.cpp)
 
-set_target_properties(viewer PROPERTIES
-    CXX_STANDARD 11
-    CXX_STANDARD_REQUIRED ON)
+# set_target_properties(viewer PROPERTIES
+#     CXX_STANDARD 11
+#     CXX_STANDARD_REQUIRED ON)
 
-target_link_libraries(viewer glfw
-                             gl3w
-                             imgui
-                             util
-                            #  transferFunction
-                             ospcommon::ospcommon 
-                             ospray::ospray)
+# target_link_libraries(viewer glfw
+#                              gl3w
+#                              imgui
+#                              util
+#                             #  transferFunction
+#                              rkcommon::rkcommon 
+#                              ospray::ospray)
 
 set_target_properties(test_data PROPERTIES
     CXX_STANDARD 11
@@ -60,5 +60,7 @@ target_link_libraries(test_data glfw
                              gl3w
                              imgui
                              util
-                             ospcommon::ospcommon 
+                             rkcommon::rkcommon 
                              ospray::ospray)
+target_compile_definitions(test_data PUBLIC
+                             -DOSPRAY_CPP_RKCOMMON_TYPES) 

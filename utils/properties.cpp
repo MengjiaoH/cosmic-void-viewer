@@ -16,7 +16,7 @@ void TransferFunctionProp::Init()
   //        lock.lock();
   //        colors = std::vector<float>(c);
   //        alphas = std::vector<float>(a);
-  //        valueRange = ospcommon::math::vec2f(r[0], r[1]);
+  //        valueRange = rkcommon::math::vec2f(r[0], r[1]);
   //        doUpdate = true;
   //        lock.unlock();
   //      });
@@ -67,7 +67,7 @@ bool TransferFunctionProp::Commit()
     self.setParam("colors", colorsData);
     self.setParam("opacities", opacitiesData);
     if (valueRange.update())
-      self.setParam("valueRange", (ospcommon::math::vec2f&)valueRange.ref());
+      self.setParam("valueRange", (rkcommon::math::vec2f&)valueRange.ref());
     self.commit();
     // ospRelease(colorsData);
     // ospRelease(opacitiesData);

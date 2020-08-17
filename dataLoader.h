@@ -6,17 +6,17 @@
 #include <vector>
 #include <algorithm>
 
-#include "ospcommon/math/vec.h"
+#include "rkcommon/math/vec.h"
 
 struct Volume
 {
     std::vector<float> voxels;
-    ospcommon::math::vec2f range;
-    ospcommon::math::vec3i dims;
-    Volume(ospcommon::math::vec3i dimensions);
+    rkcommon::math::vec2f range;
+    rkcommon::math::vec3i dims;
+    Volume(rkcommon::math::vec3i dimensions);
 };
 
-Volume::Volume(ospcommon::math::vec3i dimensions): dims(dimensions)
+Volume::Volume(rkcommon::math::vec3i dimensions): dims(dimensions)
 {}
 
 bool loadRaw(const std::string fileDir, Volume &volume)
@@ -39,7 +39,7 @@ bool loadRaw(const std::string fileDir, Volume &volume)
     // find the data range
     float minimum = *(std::min_element(volume.voxels.begin(), volume.voxels.end()));
     float maximum = *(std::max_element(volume.voxels.begin(), volume.voxels.end()));
-    volume.range = ospcommon::math::vec2f(minimum, maximum);
+    volume.range = rkcommon::math::vec2f(minimum, maximum);
 
     if(volume.voxels.size() != 0){
         return true;

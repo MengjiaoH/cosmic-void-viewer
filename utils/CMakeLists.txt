@@ -25,6 +25,6 @@ target_link_libraries(util PUBLIC
 	glfw
 	imgui
 	gl3w
-	ospcommon::ospcommon
+	rkcommon::rkcommon
 	${OPENGL_LIBRARIES}
 	${OSPRAY_LIBRARIES})

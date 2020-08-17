@@ -2,15 +2,15 @@
 
 /* ospray */
 #include "ospray/ospray_cpp.h"
-#include "ospcommon/math/vec.h"
-#include "ospcommon/utility/TransactionalValue.h"
+#include "rkcommon/math/vec.h"
+#include "rkcommon/utility/TransactionalValue.h"
 /* imgui */
 #include "TransferFunction/widgets/TransferFunctionWidget.h"
 /* stl */
 #include <vector>
 
 
-#define TValue ospcommon::utility::TransactionalValue
+#define TValue rkcommon::utility::TransactionalValue
 #define Setter(field, name, type, value)                 \
 private:                                                 \
   TValue<type> field{value};                             \
@@ -39,7 +39,7 @@ class TransferFunctionProp : public Prop
     std::vector<float> colors;
     std::vector<float> alphas;
     float valueRange_default[2] = {0.f, 1.f};
-    TValue<ospcommon::math::vec2f> valueRange;
+    TValue<rkcommon::math::vec2f> valueRange;
   public:
     TransferFunctionProp() = default;
     ospray::cpp::TransferFunction& operator*() { return self; }

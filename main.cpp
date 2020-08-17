@@ -7,8 +7,8 @@
 
 // OSPRay
 #include "ospray/ospray_cpp.h"
-#include "ospcommon/math/vec.h"
-#include "ospcommon/math/box.h"
+#include "rkcommon/math/vec.h"
+#include "rkcommon/math/box.h"
 
 // Imgui
 #include "imgui.h"
@@ -59,9 +59,9 @@ static void glfw_error_callback(int error, const char* description)
 }
 
 // Global variables
-// ospcommon::math::vec3i dims(116, 29, 26);
-ospcommon::math::vec3i dims(1024, 1024, 5);
-// ospcommon::math::vec3i dims(512, 512, 512);
+// rkcommon::math::vec3i dims(116, 29, 26);
+rkcommon::math::vec3i dims(1024, 1024, 5);
+// rkcommon::math::vec3i dims(512, 512, 512);
 
 int main(int argc, const char** argv)
 {
@@ -79,7 +79,7 @@ int main(int argc, const char** argv)
 
     int imgSize_x = 1024; // width
     int imgSize_y = 512; // height
-    ospcommon::math::vec2i imgSize = ospcommon::math::vec2i(imgSize_x, imgSize_y);
+    rkcommon::math::vec2i imgSize = rkcommon::math::vec2i(imgSize_x, imgSize_y);
     
     //!! Initialize OSPRay
     OSPError init_error = ospInit(&argc, argv);
@@ -132,10 +132,10 @@ int main(int argc, const char** argv)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
 
-    ospcommon::math::vec2f range;
-    ospcommon::math::box3f worldBound;
+    rkcommon::math::vec2f range;
+    rkcommon::math::box3f worldBound;
     range = volume.range;
-    worldBound = ospcommon::math::box3f(ospcommon::math::vec3f(0, 0, 0), ospcommon::math::vec3f(volume.dims.x, volume.dims.y, volume.dims.z));
+    worldBound = rkcommon::math::box3f(rkcommon::math::vec3f(0, 0, 0), rkcommon::math::vec3f(volume.dims.x, volume.dims.y, volume.dims.z));
 
     //!! Camera
     ArcballCamera arcballCamera(worldBound, imgSize);
@@ -174,9 +174,9 @@ int main(int argc, const char** argv)
 
     // OSPCamera camera = ospNewCamera("perspective");
     ospray::cpp::Camera camera("perspective");
-    ospcommon::math::vec3f pos = arcballCamera.eyePos();
-    ospcommon::math::vec3f dir = arcballCamera.lookDir();
-    ospcommon::math::vec3f up = arcballCamera.upDir();
+    rkcommon::math::vec3f pos = arcballCamera.eyePos();
+    rkcommon::math::vec3f dir = arcballCamera.lookDir();
+    rkcommon::math::vec3f up = arcballCamera.upDir();
     camera.setParam("aspect", imgSize.x / (float)imgSize.y);
     camera.setParam("position", pos);
     camera.setParam("direction", dir);
@@ -190,10 +190,10 @@ int main(int argc, const char** argv)
 
     auto colormap = transferFcnWidget.get_colormap();
     // set transfer function
-    // std::vector<ospcommon::math::vec3f> colors = {ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
-    //                                             ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
-    //                                             ospcommon::math::vec3f(1.0f, 0.0f, 0.0f),
-    //                                               ospcommon::math::vec3f(0.0f, 1.0f, 0.0f)};
+    // std::vector<rkcommon::math::vec3f> colors = {rkcommon::math::vec3f(1.0f, 0.0f, 0.0f),
+    //                                             rkcommon::math::vec3f(1.0f, 0.0f, 0.0f),
+    //                                             rkcommon::math::vec3f(1.0f, 0.0f, 0.0f),
+    //                                               rkcommon::math::vec3f(0.0f, 1.0f, 0.0f)};
     // std::vector<float> opacities = {0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
     // transferFcn.setParam("color", ospray::cpp::Data(colors));
@@ -218,7 +218,7 @@ int main(int argc, const char** argv)
     isoGeom.commit();
 
     ospray::cpp::Material mat("scivis", "OBJMaterial");
-    mat.setParam("Ks", ospcommon::math::vec3f(0.2f));
+    mat.setParam("Ks", rkcommon::math::vec3f(0.2f));
     mat.commit();
 
     ospray::cpp::GeometricModel isoModel(isoGeom);
@@ -353,4 +353,4 @@ int main(int argc, const char** argv)
 }
 
 
-// export LD_LIBRARY_PATH=/home/mengjiao/external/ospcommon/install/lib:/home/mengjiao/external/VTK-8.2.0/install/lib:/home/mengjiao/external/ospray/install/lib:/home/mengjiao/external/embree-3.3.0.x86_64.linux/lib:/home/mengjiao/external/openvkl/install/lib
+// export LD_LIBRARY_PATH=/home/mengjiao/external/rkcommon/install/lib:/home/mengjiao/external/VTK-8.2.0/install/lib:/home/mengjiao/external/ospray/install/lib:/home/mengjiao/external/embree-3.3.0.x86_64.linux/lib:/home/mengjiao/external/openvkl/install/lib

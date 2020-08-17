@@ -17,38 +17,38 @@
 #pragma once
 
 
-#include "ospcommon/math/ospmath.h"
-#include "ospcommon/math/AffineSpace.h"
-#include "ospcommon/math/vec.h"
+#include "rkcommon/math/rkmath.h"
+#include "rkcommon/math/AffineSpace.h"
+#include "rkcommon/math/vec.h"
 
 class ArcballCamera
 {
  public:
-  ArcballCamera(const ospcommon::math::box3f &worldBounds,
-                const ospcommon::math::vec2i &windowSize);
+  ArcballCamera(const rkcommon::math::box3f &worldBounds,
+                const rkcommon::math::vec2i &windowSize);
 
   // All mouse positions passed should be in [-1, 1] normalized screen coords
-  void rotate(const ospcommon::math::vec2f &from, const ospcommon::math::vec2f &to);
+  void rotate(const rkcommon::math::vec2f &from, const rkcommon::math::vec2f &to);
   void zoom(float amount);
-  void pan(const ospcommon::math::vec2f &delta);
+  void pan(const rkcommon::math::vec2f &delta);
 
-  ospcommon::math::vec3f eyePos() const;
-  ospcommon::math::vec3f center() const;
-  ospcommon::math::vec3f lookDir() const;
-  ospcommon::math::vec3f upDir() const;
+  rkcommon::math::vec3f eyePos() const;
+  rkcommon::math::vec3f center() const;
+  rkcommon::math::vec3f lookDir() const;
+  rkcommon::math::vec3f upDir() const;
 
-  void updateWindowSize(const ospcommon::math::vec2i &windowSize);
-  ospcommon::math::vec2f worldToPixel(ospcommon::math::vec3f worldPos, ospcommon::math::vec2i imgSize);
+  void updateWindowSize(const rkcommon::math::vec2i &windowSize);
+  rkcommon::math::vec2f worldToPixel(rkcommon::math::vec3f worldPos, rkcommon::math::vec2i imgSize);
 
  protected:
   void updateCamera();
 
   // Project the point in [-1, 1] screen space onto the arcball sphere
-  ospcommon::math::quaternionf screenToArcball(const ospcommon::math::vec2f &p);
+  rkcommon::math::quaternionf screenToArcball(const rkcommon::math::vec2f &p);
 
   float zoomSpeed;
-  ospcommon::math::vec2f invWindowSize;
-  ospcommon::math::AffineSpace3f centerTranslation, translation, invCamera;
-  ospcommon::math::quaternionf rotation;
+  rkcommon::math::vec2f invWindowSize;
+  rkcommon::math::AffineSpace3f centerTranslation, translation, invCamera;
+  rkcommon::math::quaternionf rotation;
 
 };
