@@ -36,8 +36,6 @@ include_directories("${CMAKE_SOURCE_DIR}/utils")
 
 # add_executable(viewer main.cpp)
 
-add_executable(test_data testMain.cpp)
-
 # add_library(common dataLoader.cpp)
 
 # set_target_properties(viewer PROPERTIES
@@ -52,6 +50,8 @@ add_executable(test_data testMain.cpp)
 #                              rkcommon::rkcommon 
 #                              ospray::ospray)
 
+add_executable(test_data testMain.cpp)
+
 set_target_properties(test_data PROPERTIES
     CXX_STANDARD 11
     CXX_STANDARD_REQUIRED ON)
@@ -62,5 +62,6 @@ target_link_libraries(test_data glfw
                              util
                              rkcommon::rkcommon 
                              ospray::ospray)
+
 target_compile_definitions(test_data PUBLIC
                              -DOSPRAY_CPP_RKCOMMON_TYPES) 
