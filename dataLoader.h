@@ -8,19 +8,23 @@
 
 #include "rkcommon/math/vec.h"
 
+using namespace rkcommon::math;
+
 struct Volume
 {
     std::vector<float> voxels;
-    rkcommon::math::vec2f range;
-    rkcommon::math::vec3i dims;
-    Volume(rkcommon::math::vec3i dimensions);
+    vec2f range;
+    vec3i dims;
+    vec3f spacing = vec3f{1.f, 1.f, 1.f};
+    Volume();
 };
 
-Volume::Volume(rkcommon::math::vec3i dimensions): dims(dimensions)
-{}
+Volume::Volume(){}
 
-bool loadRaw(const std::string fileDir, Volume &volume)
+bool loadRaw(const std::string fileDir, const vec3i dims, Volume &volume)
 {
+    volume.dims = dims;
+
     std::ifstream input(fileDir.c_str(), std::ios::binary);
 
     // find file size
@@ -29,7 +33,7 @@ bool loadRaw(const std::string fileDir, Volume &volume)
     input.seekg(0, input.beg);
     
     // std::cout << "size of float " << sizeof(float) << std::endl;
-    std::cout << "file size = " << filesize << std::endl;
+    // std::cout << "file size = " << filesize << std::endl;
 
     // Here is the size of data
     // volume.voxels.resize(16*16*16);
@@ -40,6 +44,10 @@ bool loadRaw(const std::string fileDir, Volume &volume)
     float minimum = *(std::min_element(volume.voxels.begin(), volume.voxels.end()));
     float maximum = *(std::max_element(volume.voxels.begin(), volume.voxels.end()));
     volume.range = rkcommon::math::vec2f(minimum, maximum);
+
+    std::cout << "volume info: " << std::endl;
+    std::cout << "volume dims " << volume.dims << std::endl;
+    std::cout << "volume range " << volume.range << std::endl;
 
     if(volume.voxels.size() != 0){
         return true;

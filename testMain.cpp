@@ -36,6 +36,9 @@
 #include "callbacks.h"
 #include "shader.h"
 #include "ArcballCamera.h"
+#include "parseArgs.h"
+#include "dataLoader.h"
+#include "ospray_volume.h"
 
 using namespace rkcommon::math;
 
@@ -92,32 +95,20 @@ void writePPM(const char *fileName, const vec2i &size, const uint32_t *pixel)
 
 int main(int argc, const char **argv)
 {
+	Args args;
+    parseArgs(argc, argv, args);
+
+	// Load raw data 
+	Volume volume;
+	loadRaw(args.filename, args.dims, volume);
+
     // image size
     vec2i imgSize;
     imgSize.x = 1024; // width
     imgSize.y = 768; // height
 
-    // camera
-    vec3f cam_pos{0.f, 0.f, 0.f};
-    vec3f cam_up{0.f, 1.f, 0.f};
-    vec3f cam_view{0.1f, 0.f, 1.f};
-
-    // triangle mesh data
-    std::vector<vec3f> vertex = {vec3f(-1.0f, -1.0f, 3.0f),
-        vec3f(-1.0f, 1.0f, 3.0f),
-        vec3f(1.0f, -1.0f, 3.0f),
-        vec3f(0.1f, 0.1f, 0.3f)};
-
-    std::vector<vec4f> color = {vec4f(0.9f, 0.5f, 0.5f, 1.0f),
-        vec4f(0.8f, 0.8f, 0.8f, 1.0f),
-        vec4f(0.8f, 0.8f, 0.8f, 1.0f),
-        vec4f(0.5f, 0.9f, 0.5f, 1.0f)};
-
-    std::vector<vec3ui> index = {vec3ui(0, 1, 2), vec3ui(1, 2, 3)};
-
-    box3f worldBound;
-    worldBound.lower = vec3f{-1.f, -1.f, 0.f};
-    worldBound.upper = vec3f{1.f, 1.f, 3.0f};
+	box3f worldBound = box3f(-volume.dims / 2 * volume.spacing, volume.dims / 2 * volume.spacing);
+    vec2f range = volume.range; 
 
     ArcballCamera arcballCamera(worldBound, imgSize);
     
@@ -202,21 +193,22 @@ int main(int argc, const char **argv)
         camera.setParam("up", arcballCamera.upDir());
         camera.commit(); // commit each object to indicate modifications are done
 
-        // create and setup model and mesh
-        ospray::cpp::Geometry mesh("mesh");
-        mesh.setParam("vertex.position", ospray::cpp::CopiedData(vertex));
-        mesh.setParam("vertex.color", ospray::cpp::CopiedData(color));
-        mesh.setParam("index", ospray::cpp::CopiedData(index));
-        mesh.commit();
+		//! Transfer function
+		const std::string colormap = "jet";
+		ospray::cpp::TransferFunction transfer_function = makeTransferFunction(colormap, range);
 
-        // put the mesh into a model
-        ospray::cpp::GeometricModel model(mesh);
-        model.commit();
+		//! Volume
+		ospray::cpp::Volume osp_volume = createStructuredVolume(volume);
+		//! Volume Model
+		ospray::cpp::VolumetricModel volume_model(osp_volume);
+		volume_model.setParam("transferFunction", transfer_function);
+		volume_model.commit();
 
-        // put the model into a group (collection of models)
-        ospray::cpp::Group group;
-        group.setParam("geometry", ospray::cpp::CopiedData(model));
-        group.commit();
+		// put the model into a group (collection of models)
+		ospray::cpp::Group group;
+		group.setParam("volume", ospray::cpp::CopiedData(volume_model));
+		// group.setParam("geometry", ospray::cpp::Data(geo_model));
+		group.commit();
 
         // put the group into an instance (give the group a world transform)
         ospray::cpp::Instance instance(group);

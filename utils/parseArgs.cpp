@@ -18,6 +18,10 @@ void parseArgs(int argc, const char **argv, Args &args)
         std::string arg = argv[i];
         if(arg == "-f"){
             args.filename = argv[++i];
+        }else if(arg == "-dims"){
+            args.dims.x = std::stoi(argv[++i]);
+            args.dims.y = std::stoi(argv[++i]);
+            args.dims.z = std::stoi(argv[++i]);
         }
     }
     // find file extension

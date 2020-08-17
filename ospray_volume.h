@@ -10,94 +10,102 @@
 #include "dataLoader.h"
 
 
-ospray::cpp::Volume make_ospray_volume(Volume v, rkcommon::math::box3f &worldBound){
-    
-    ospray::cpp::Volume volume("structured_volume");
-    const rkcommon::math::vec3i dims(v.dims.x, v.dims.y, v.dims.z);
+ospray::cpp::Volume createStructuredVolume(const Volume volume)
+{
+    ospray::cpp::Volume osp_volume("structuredRegular");
 
-    rkcommon::math::vec3f spacing{.5f};
-    auto numVoxels = dims.product();
+    auto voxels = volume.voxels;
 
-    std::vector<float> data;
-
-    for(int i = 0; i < v.voxels.size(); i++){
-        // std::cout << v.voxels[i] << " ";
-        data.push_back(v.voxels[i]);
-    }
-    std::cout << std::endl;
-
-    volume.setParam("voxelType",int(OSP_FLOAT));
-    volume.setParam("dimensions", dims);
-    volume.setParam("voxelData", ospray::cpp::Data(data));
-    // volume.setParam("gridSpacing", rkcommon::math::vec3i(2.5f));
-    worldBound = rkcommon::math::box3f(rkcommon::math::vec3f(0.f), dims * spacing);
-
-    volume.commit();
-  
-    return volume;
+    osp_volume.setParam("gridOrigin", vec3f(-volume.dims.x/ 2.f, -volume.dims.y/2.f, -volume.dims.z/2.f));
+    osp_volume.setParam("gridSpacing", vec3f(1.f));
+    osp_volume.setParam("data", ospray::cpp::CopiedData(voxels.data(), volume.dims));
+    osp_volume.commit();
+    return osp_volume;
 }
 
-// ospray::cpp::Volume recommit_ospray_volume(Volume<float> v, rkcommon::math::vec2f &range){
-//     ospray::cpp::Volume volume("structured_volume");
-//     const rkcommon::math::vec3i dims(v.dim.x, v.dim.y, v.dim.z);
-//     rkcommon::math::vec3f spacing{1.f};
+// void update_transfer_fcn(ospray::cpp::TransferFunction &tfcn, const std::vector<uint8_t> &colormap, rkcommon::math::vec2f valueRange) {
+//     std::vector<rkcommon::math::vec3f> colors;
+//     std::vector<float> opacities;
 
-//     auto numVoxels = dims.product();
-//     volume.setParam("voxelType",int(OSP_FLOAT));
-//     volume.setParam("dimensions", dims);
-//     volume.setParam("voxelData", ospray::cpp::Data(numVoxels, OSP_FLOAT, v.voxels.data()));
-//     range  = v.range;
+//     for (size_t i = 0; i < colormap.size() / 4; ++i) {
+//         rkcommon::math::vec3f c(colormap[i * 4] / 255.f, colormap[i * 4 + 1] / 255.f, colormap[i * 4 + 2] / 255.f);
+//         colors.push_back(c);
+//         if(colormap[i * 4 + 3] / 255.f < 0.1f){
+//             opacities.push_back(0.f);
+//         }else{
+//             opacities.push_back(colormap[i * 4 + 3] / 255.f);
+//         }
+//         // std::cout << colormap[i * 4 + 3] / 255.f << " ";
+//     }
+//     // std::cout << std::endl;
+//     tfcn.setParam("color", ospray::cpp::Data(colors));
+//     ospray::cpp::Data opacity = ospray::cpp::Data(opacities);
+//     tfcn.setParam("opacity", opacity);
+//     // tfcn.setParam("opacity", ospray::cpp::Data(opacities));
+//     tfcn.setParam("valueRange", valueRange);
+//     tfcn.commit();
 
-//     volume.commit();
-
-//     return volume;
 // }
 
+// void looping_transfer_fcn(ospray::cpp::TransferFunction &tfcn, rkcommon::math::vec2f valueRange, int temp){
+//     int total = (valueRange.y - valueRange.x) / 0.1f;
+//     std::vector<rkcommon::math::vec3f> colors;
+//     std::vector<float> opacities;
 
-void update_transfer_fcn(ospray::cpp::TransferFunction &tfcn, const std::vector<uint8_t> &colormap, rkcommon::math::vec2f valueRange) {
-    std::vector<rkcommon::math::vec3f> colors;
+//     for (size_t i = 0; i < total; ++i) {
+//         rkcommon::math::vec3f c(0.f / 255.f, 0.f/ 255.f, 255.f/ 255.f);
+//         colors.push_back(c);
+//         if(i < temp){
+//             opacities.push_back(1.f);
+//         }else{
+//             opacities.push_back(1.0f);
+//         }
+//         // std::cout << colormap[i * 4 + 3] / 255.f << " ";
+//     }
+//     // std::cout << std::endl;
+//     tfcn.setParam("color", ospray::cpp::Data(colors));
+//     ospray::cpp::Data opacity = ospray::cpp::Data(opacities);
+//     tfcn.setParam("opacity", opacity);
+//     // tfcn.setParam("opacity", ospray::cpp::Data(opacities));
+//     tfcn.setParam("valueRange", valueRange);
+//     tfcn.commit();
+// }
+
+ospray::cpp::TransferFunction makeTransferFunction(const std::string tfColorMap, const vec2f &valueRange)
+{
+    ospray::cpp::TransferFunction transferFunction("piecewiseLinear");
+
+    std::vector<vec3f> colors;
     std::vector<float> opacities;
 
-    for (size_t i = 0; i < colormap.size() / 4; ++i) {
-        rkcommon::math::vec3f c(colormap[i * 4] / 255.f, colormap[i * 4 + 1] / 255.f, colormap[i * 4 + 2] / 255.f);
-        colors.push_back(c);
-        if(colormap[i * 4 + 3] / 255.f < 0.1f){
-            opacities.push_back(0.f);
-        }else{
-            opacities.push_back(colormap[i * 4 + 3] / 255.f);
-        }
-        // std::cout << colormap[i * 4 + 3] / 255.f << " ";
+    if (tfColorMap == "jet") {
+        colors.emplace_back(0, 0, 0.562493);
+        colors.emplace_back(0, 0, 1);
+        colors.emplace_back(0, 1, 1);
+        colors.emplace_back(0.500008, 1, 0.500008);
+        colors.emplace_back(1, 1, 0);
+        colors.emplace_back(1, 0, 0);
+        colors.emplace_back(0.500008, 0, 0);
+    } else if (tfColorMap == "rgb") {
+        colors.emplace_back(0, 0, 1);
+        colors.emplace_back(0, 1, 0);
+        colors.emplace_back(1, 0, 0);
+    } else {
+        colors.emplace_back(0.f, 0.f, 0.f);
+        colors.emplace_back(1.f, 1.f, 1.f);
     }
-    // std::cout << std::endl;
-    tfcn.setParam("color", ospray::cpp::Data(colors));
-    ospray::cpp::Data opacity = ospray::cpp::Data(opacities);
-    tfcn.setParam("opacity", opacity);
-    // tfcn.setParam("opacity", ospray::cpp::Data(opacities));
-    tfcn.setParam("valueRange", valueRange);
-    tfcn.commit();
 
-}
+    std::string tfOpacityMap = "linear";
 
-void looping_transfer_fcn(ospray::cpp::TransferFunction &tfcn, rkcommon::math::vec2f valueRange, int temp){
-    int total = (valueRange.y - valueRange.x) / 0.1f;
-    std::vector<rkcommon::math::vec3f> colors;
-    std::vector<float> opacities;
-
-    for (size_t i = 0; i < total; ++i) {
-        rkcommon::math::vec3f c(0.f / 255.f, 0.f/ 255.f, 255.f/ 255.f);
-        colors.push_back(c);
-        if(i < temp){
-            opacities.push_back(1.f);
-        }else{
-            opacities.push_back(1.0f);
-        }
-        // std::cout << colormap[i * 4 + 3] / 255.f << " ";
+    if (tfOpacityMap == "linear") {
+        opacities.emplace_back(0.f);
+        opacities.emplace_back(1.f);
     }
-    // std::cout << std::endl;
-    tfcn.setParam("color", ospray::cpp::Data(colors));
-    ospray::cpp::Data opacity = ospray::cpp::Data(opacities);
-    tfcn.setParam("opacity", opacity);
-    // tfcn.setParam("opacity", ospray::cpp::Data(opacities));
-    tfcn.setParam("valueRange", valueRange);
-    tfcn.commit();
+
+    transferFunction.setParam("color", ospray::cpp::CopiedData(colors));
+    transferFunction.setParam("opacity", ospray::cpp::CopiedData(opacities));
+    transferFunction.setParam("valueRange", valueRange);
+    transferFunction.commit();
+
+    return transferFunction;
 }
