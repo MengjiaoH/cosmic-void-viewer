@@ -247,6 +247,9 @@ int main(int argc, const char **argv)
                 camera.setParam("position", app->camera.eyePos());
                 camera.setParam("direction", app->camera.lookDir());
                 camera.setParam("up", app->camera.upDir());
+        std::cout << "camera pos " << app->camera.eyePos() << std::endl;
+        std::cout << "camera look dir " << app->camera.lookDir() << std::endl;
+        std::cout << "camera up dir " << app->camera.upDir() << std::endl;
                 camera.commit();
                 framebuffer.clear();
                 app ->isCameraChanged = false;
