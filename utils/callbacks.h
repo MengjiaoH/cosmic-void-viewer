@@ -17,7 +17,9 @@ struct App
     bool isCameraChanged = false;
     rkcommon::math::vec2i fbSize;
     ArcballCamera camera; 
-    bool isTimeStepChanged = false;
+    bool isIsoValueChanged = false;
+    // bool showIsosurfaces = false;
+    // bool showVolume = false;
     bool isTransferFcnChanged = false;
 
     App(rkcommon::math::vec2i imgSize, ArcballCamera &camera) 

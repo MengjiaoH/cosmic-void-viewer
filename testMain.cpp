@@ -28,17 +28,22 @@
 #include <GLFW/glfw3.h>
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
+
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
 #include "callbacks.h"
+#include "transfer_function_widget.h"
+#include "widget.h"
 #include "shader.h"
 #include "ArcballCamera.h"
 #include "parseArgs.h"
 #include "dataLoader.h"
 #include "ospray_volume.h"
+
 
 using namespace rkcommon::math;
 
@@ -99,8 +104,12 @@ int main(int argc, const char **argv)
     parseArgs(argc, argv, args);
 
 	// Load raw data 
-	Volume volume;
-	loadRaw(args.filename, args.dims, volume);
+	Volume volume = load_raw_volume(args.filename, args.dims, args.dtype);
+    // load json file for barcode
+    std::vector<Bar> bars = getBarcode();
+    for(int i = 0; i < 5; i++){
+        std::cout << bars[i].birth << " " << bars[i].death << " " << bars[i].birth - bars[i].death << std::endl;
+    }
 
     // image size
     vec2i imgSize;
@@ -114,6 +123,11 @@ int main(int argc, const char **argv)
     
     std::shared_ptr<App> app;
     app = std::make_shared<App>(imgSize, arcballCamera);
+    TransferFunctionWidget transferFcnWidget;
+    float default_iso = 0.f;
+    Widget widget(range.x, range.y, default_iso, bars);
+    int total = (range.y - range.x) / 0.1f;
+
 
     // initialize OSPRay; OSPRay parses (and removes) its commandline parameters,
     // e.g. "--osp:debug"
@@ -194,9 +208,9 @@ int main(int argc, const char **argv)
         camera.commit(); // commit each object to indicate modifications are done
 
 		//! Transfer function
-		const std::string colormap = "jet";
+		// const std::string colormap = "jet";
+        auto colormap = transferFcnWidget.get_colormap();
 		ospray::cpp::TransferFunction transfer_function = makeTransferFunction(colormap, range);
-
 		//! Volume
 		ospray::cpp::Volume osp_volume = createStructuredVolume(volume);
 		//! Volume Model
@@ -204,10 +218,32 @@ int main(int argc, const char **argv)
 		volume_model.setParam("transferFunction", transfer_function);
 		volume_model.commit();
 
+        // gather all iso-values 
+        ospray::cpp::Texture volume_texture("volume");
+        volume_texture.setParam("volume", volume_model);
+        volume_texture.setParam("transferFunction", transfer_function);
+        volume_texture.commit();
+
+        ospray::cpp::Material mat("scivis", "obj");
+        mat.setParam("map_kd", volume_texture);
+        mat.commit();
+
+        std::vector<float> iso_values = getAllIsoValues(volume, default_iso);
+        ospray::cpp::Geometry isoGeom("isosurface");
+        isoGeom.setParam("isovalue", ospray::cpp::CopiedData(iso_values));
+        isoGeom.setParam("volume", osp_volume);
+        isoGeom.commit();
+
+        ospray::cpp::GeometricModel isoModel(isoGeom);
+        isoModel.setParam("material", mat);
+        // std::vector<vec4f> colors = {vec4f(3/255.f, 15/255.f, 252/255.f, 1.f)};
+        // isoModel.setParam("color", ospray::cpp::CopiedData(colors));
+        isoModel.commit();
+
 		// put the model into a group (collection of models)
 		ospray::cpp::Group group;
-		group.setParam("volume", ospray::cpp::CopiedData(volume_model));
-		// group.setParam("geometry", ospray::cpp::Data(geo_model));
+		// group.setParam("volume", ospray::cpp::CopiedData(volume_model));
+        group.setParam("geometry", ospray::cpp::CopiedData(isoModel));
 		group.commit();
 
         // put the group into an instance (give the group a world transform)
@@ -230,7 +266,9 @@ int main(int argc, const char **argv)
 
         // complete setup of renderer
         renderer.setParam("aoSamples", 1);
+        renderer.setParam("shadows", 1);
         renderer.setParam("backgroundColor", 1.0f); // white, transparent
+        renderer.setParam("pixelFilter", "gaussian");
         renderer.commit();
 
         // create and setup framebuffer
@@ -242,18 +280,73 @@ int main(int argc, const char **argv)
 
         while (!glfwWindowShouldClose(window))
         {
+            app -> isTransferFcnChanged = transferFcnWidget.changed();
+            app -> isIsoValueChanged = widget.changed();
+            // app ->showIsosurfaces = widget.show_isosurfaces;
+            // app ->showVolume = widget.show_volume;
+            // std::cout << app ->showIsosurfaces << std::endl;
+            if(app ->isIsoValueChanged){
+                float iso_value = widget.getIsoValue();
+                iso_values = getAllIsoValues(volume, iso_value);
+                isoGeom.setParam("isovalue", ospray::cpp::CopiedData(iso_values));
+                isoGeom.commit();
+                framebuffer.clear();
+                app ->isIsoValueChanged = false;
+            }  
+            // if(app ->showVolume){
+            //     group.setParam("volume", ospray::cpp::CopiedData(volume_model));
+            //     group.commit();
+            //     ospray::cpp::Instance instance(group);
+            //     instance.commit();
+            //     world.setParam("instance", ospray::cpp::CopiedData(instance));
+            //     world.commit();
+            //     framebuffer.clear();
+            // }
+            // rkcommon::containers::TransactionalBuffer<OSPObject> objectsToCommit;
 
             if (app ->isCameraChanged) {
                 camera.setParam("position", app->camera.eyePos());
                 camera.setParam("direction", app->camera.lookDir());
                 camera.setParam("up", app->camera.upDir());
-        std::cout << "camera pos " << app->camera.eyePos() << std::endl;
-        std::cout << "camera look dir " << app->camera.lookDir() << std::endl;
-        std::cout << "camera up dir " << app->camera.upDir() << std::endl;
+                // std::cout << "camera pos " << app->camera.eyePos() << std::endl;
+                // std::cout << "camera look dir " << app->camera.lookDir() << std::endl;
+                // std::cout << "camera up dir " << app->camera.upDir() << std::endl;
                 camera.commit();
                 framebuffer.clear();
                 app ->isCameraChanged = false;
             }
+            // if (app -> isTransferFcnChanged) {
+            //     // std::cout << "transfer function changed!" << std::endl;
+			//     auto colormap = transferFcnWidget.get_colormap();
+			//     // update_transfer_fcn(transferFcn, colormap, range);
+            //     transfer_function = makeTransferFunction(colormap, range);
+            //     volume_model.setParam("transferFunction", transfer_function);
+            //     volume_model.commit();
+            //     framebuffer.clear();
+            //     app ->isTransferFcnChanged = false;
+		    // }
+
+            // Start the Dear ImGui frame
+            ImGui_ImplOpenGL3_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+
+            // if (ImGui::Begin("Transfer Function")) {
+            //     transferFcnWidget.draw_ui();
+            // }
+            
+            // ImGui::End();
+
+            if(ImGui::Begin("Control Panel")){
+                ImGui::Text("Density Range: %.3f to %.3f", range.x, range.y);
+                widget.draw();
+            }
+            
+
+            ImGui::End();
+
+            ImGui::Render();
+
             // render one frame
             framebuffer.renderFrame(renderer, camera, world);
             framebuffer.clear();
@@ -268,6 +361,7 @@ int main(int argc, const char **argv)
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             framebuffer.unmap(fb);
 
+            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             glfwSwapBuffers(window);
             glfwPollEvents();
         }

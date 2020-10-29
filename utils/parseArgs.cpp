@@ -22,6 +22,8 @@ void parseArgs(int argc, const char **argv, Args &args)
             args.dims.x = std::stoi(argv[++i]);
             args.dims.y = std::stoi(argv[++i]);
             args.dims.z = std::stoi(argv[++i]);
+        }else if(arg == "-dtype"){
+            args.dtype = argv[++i];
         }
     }
     // find file extension

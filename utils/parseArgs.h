@@ -12,6 +12,7 @@ struct Args
     std::string extension;
     std::string filename;
     vec3i dims;
+    std::string dtype;
 };
 
 std::string getFileExt(const std::string& s);

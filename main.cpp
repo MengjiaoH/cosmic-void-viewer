@@ -279,7 +279,7 @@ int main(int argc, const char** argv)
             // std::cout << "transfer function changed!" << std::endl;
 			auto colormap = transferFcnWidget.get_colormap();
 			update_transfer_fcn(transferFcn, colormap, range);
-            renderer.commit();
+            model.commit();
             framebuffer.clear();
             app ->isTransferFcnChanged = false;
 		}
